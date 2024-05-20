@@ -443,17 +443,17 @@
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::{Add, Sub, Mul, Div};
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt;
+<span class="kw">use </span>std::ops::{Add, Sub, Mul, Div};
 
-<span class="doccomment">/// A 3-dimensional vector struct with x, y, and z components.
-</span><span class="attr">#[derive(Debug, Copy, Clone)]
+<span class="doccomment">/// A n-dimensional vector struct with x, y, z and ... components.
+</span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Vector {
-    <span class="doccomment">/// The x component of the vector.
-    </span>x: f64,
-    <span class="doccomment">/// The y component of the vector.
-    </span>y: f64,
-    <span class="doccomment">/// The z component of the vector.
-    </span>z: f64,
+    components: Vec&lt;f64&gt;,
 }
 
 <span class="kw">impl </span>Vector {
@@ -464,14 +464,16 @@
     /// * `x` - The x component of the vector.
     /// * `y` - The y component of the vector.
     /// * `z` - The z component of the vector.
+    /// * `components` - The vector components.
     ///
     /// # Example
     ///
     /// ```
-    /// let v = Vector::new(1.0, 2.0, 3.0);
+    /// let v1 = Vector::new(vec![1.0, 2.0, 3.0, 4.0]);
+    /// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
     /// ```
-    </span><span class="kw">pub fn </span>new(x: f64, y: f64, z: f64) -&gt; <span class="self">Self </span>{
-        Vector { x, y, z }
+    </span><span class="kw">pub fn </span>new(components: Vec&lt;f64&gt;) -&gt; <span class="self">Self </span>{
+        Vector { components }
     }
 
     <span class="doccomment">/// Calculates the dot product of this vector and another vector.
@@ -487,37 +489,15 @@
     /// # Example
     ///
     /// ```
-    /// let v1 = Vector::new(1.0, 2.0, 3.0);
-    /// let v2 = Vector::new(4.0, 5.0, 6.0);
+    /// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+    /// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
     /// let dot_product = v1.dot(&amp;v2);
     /// ```
     </span><span class="kw">pub fn </span>dot(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Vector) -&gt; f64 {
-        <span class="self">self</span>.x * other.x + <span class="self">self</span>.y * other.y + <span class="self">self</span>.z * other.z
-    }
-
-    <span class="doccomment">/// Calculates the cross product of this vector and another vector.
-    ///
-    /// # Arguments
-    ///
-    /// * `other` - The other vector.
-    ///
-    /// # Returns
-    ///
-    /// The cross product of the two vectors.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// let v1 = Vector::new(1.0, 0.0, 0.0);
-    /// let v2 = Vector::new(0.0, 1.0, 0.0);
-    /// let cross_product = v1.cross(&amp;v2);
-    /// ```
-    </span><span class="kw">pub fn </span>cross(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Vector) -&gt; Vector {
-        Vector::new(
-            <span class="self">self</span>.y * other.z - <span class="self">self</span>.z * other.y,
-            <span class="self">self</span>.z * other.x - <span class="self">self</span>.x * other.z,
-            <span class="self">self</span>.x * other.y - <span class="self">self</span>.y * other.x,
-        )
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != other.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for dot product calculation."</span>);
+        }
+        <span class="self">self</span>.components.iter().zip(<span class="kw-2">&amp;</span>other.components).map(|(a, b)| a * b).sum()
     }
 
     <span class="doccomment">/// Calculates the magnitude (length) of this vector.
@@ -529,11 +509,11 @@
     /// # Example
     ///
     /// ```
-    /// let v = Vector::new(3.0, 4.0, 5.0);
+    /// let v = Vector::new(vec![1.0, 2.0, 3.0]);
     /// let magnitude = v.magnitude();
     /// ```
     </span><span class="kw">pub fn </span>magnitude(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f64 {
-        (<span class="self">self</span>.x * <span class="self">self</span>.x + <span class="self">self</span>.y * <span class="self">self</span>.y + <span class="self">self</span>.z * <span class="self">self</span>.z).sqrt()
+        <span class="self">self</span>.components.iter().map(|<span class="kw-2">&amp;</span>x| x * x).sum::&lt;f64&gt;().sqrt()
     }
 
     <span class="doccomment">/// Normalizes this vector, producing a new vector with the same direction but a magnitude of 1.
@@ -545,12 +525,12 @@
     /// # Example
     ///
     /// ```
-    /// let v = Vector::new(3.0, 4.0, 5.0);
+    /// let v = Vector::new(vec![1.0, 2.0, 3.0]);
     /// let normalized_vector = v.normalize();
     /// ```
     </span><span class="kw">pub fn </span>normalize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vector {
         <span class="kw">let </span>mag = <span class="self">self</span>.magnitude();
-        Vector::new(<span class="self">self</span>.x / mag, <span class="self">self</span>.y / mag, <span class="self">self</span>.z / mag)
+        Vector::new(<span class="self">self</span>.components.iter().map(|<span class="kw-2">&amp;</span>x| x / mag).collect())
     }
 
     <span class="doccomment">/// Calculates the angle in radians between this vector and another vector.
@@ -566,22 +546,24 @@
     /// # Example
     ///
     /// ```
-    /// let v1 = Vector::new(1.0, 0.0, 0.0);
-    /// let v2 = Vector::new(0.0, 1.0, 0.0);
+    /// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+    /// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
     /// let angle = v1.angle_between(&amp;v2);
     /// ```
     </span><span class="kw">pub fn </span>angle_between(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Vector) -&gt; f64 {
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != other.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for angle calculation."</span>);
+        }
         <span class="kw">let </span>self_normalized = <span class="self">self</span>.normalize();
         <span class="kw">let </span>other_normalized = other.normalize();
-    
         <span class="kw">let </span>dot_product = self_normalized.dot(<span class="kw-2">&amp;</span>other_normalized);
-    
-        <span class="kw">if </span>dot_product &lt; -<span class="number">1.0 </span>{
+
+        <span class="kw">if </span>dot_product &lt;= -<span class="number">1.0 </span>{
             <span class="kw">return </span>std::f64::consts::PI;
-        } <span class="kw">else if </span>dot_product &gt; <span class="number">1.0 </span>{
+        } <span class="kw">else if </span>dot_product &gt;= <span class="number">1.0 </span>{
             <span class="kw">return </span><span class="number">0.0</span>;
         }
-    
+
         dot_product.acos()
     }
 
@@ -598,8 +580,8 @@
     /// # Example
     ///
     /// ```
-    /// let v1 = Vector::new(1.0, 0.0, 0.0);
-    /// let v2 = Vector::new(0.0, 1.0, 0.0);
+    /// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+    /// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
     /// let angle_degrees = v1.angle_between_degrees(&amp;v2);
     /// ```
     </span><span class="kw">pub fn </span>angle_between_degrees(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Vector) -&gt; f64 {
@@ -620,11 +602,14 @@
     /// # Example
     ///
     /// ```
-    /// let v1 = Vector::new(3.0, 4.0, 5.0);
-    /// let v2 = Vector::new(1.0, 1.0, 1.0);
+    /// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+    /// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
     /// let scalar_projection = v1.scalar_proj(&amp;v2);
     /// ```
     </span><span class="kw">pub fn </span>scalar_proj(<span class="kw-2">&amp;</span><span class="self">self</span>, onto: <span class="kw-2">&amp;</span>Vector) -&gt; f64 {
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != onto.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for scalar projection calculation."</span>);
+        }
         <span class="self">self</span>.dot(onto) / onto.magnitude()
     }
 
@@ -641,14 +626,16 @@
     /// # Example
     ///
     /// ```
-    /// let v1 = Vector::new(3.0, 4.0, 5.0);
-    /// let v2 = Vector::new(1.0, 1.0, 1.0);
+    /// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+    /// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
     /// let projected_vector = v1.project_onto(&amp;v2);
     /// ```
     </span><span class="kw">pub fn </span>project_onto(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Vector) -&gt; Vector {
-        <span class="kw">let </span>scalar = <span class="self">self</span>.dot
-        (other) / other.dot(other);
-        <span class="kw-2">*</span>other * scalar
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != other.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for vector projection calculation."</span>);
+        }
+        <span class="kw">let </span>scalar = <span class="self">self</span>.dot(other) / other.dot(other);
+        other.clone() * scalar
     }
 
     <span class="doccomment">/// Converts radians to degrees.
@@ -691,28 +678,6 @@
         degrees * std::f64::consts::PI / <span class="number">180.0
     </span>}
 
-    <span class="doccomment">/// Calculates the vector projection of this vector onto another vector.
-    ///
-    /// # Arguments
-    ///
-    /// * `onto` - The vector onto which to project this vector.
-    ///
-    /// # Returns
-    ///
-    /// The vector projection of this vector onto the other vector.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// let v1 = Vector::new(3.0, 4.0, 5.0);
-    /// let v2 = Vector::new(1.0, 1.0, 1.0);
-    /// let vector_projection = v1.vector_proj(&amp;v2);
-    /// ```
-    </span><span class="kw">pub fn </span>vector_proj(<span class="kw-2">&amp;</span><span class="self">self</span>, onto: <span class="kw-2">&amp;</span>Vector) -&gt; Vector {
-        <span class="kw">let </span>scalar = <span class="self">self</span>.dot(onto) / onto.dot(onto);
-        <span class="kw-2">*</span>onto * scalar
-    }
-
     <span class="doccomment">/// Calculates the orthogonal projection of this vector onto another vector.
     ///
     /// # Arguments
@@ -726,64 +691,76 @@
     /// # Example
     ///
     /// ```
-    /// let v1 = Vector::new(3.0, 4.0, 5.0);
-    /// let v2 = Vector::new(1.0, 1.0, 1.0);
+    /// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+    /// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
     /// let orthogonal_projection = v1.orthogonal_proj(&amp;v2);
     /// ```
     </span><span class="kw">pub fn </span>orthogonal_proj(<span class="kw-2">&amp;</span><span class="self">self</span>, onto: <span class="kw-2">&amp;</span>Vector) -&gt; Vector {
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != onto.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for orthogonal projection calculation."</span>);
+        }
         <span class="kw">let </span>vector_proj = <span class="self">self</span>.project_onto(onto);
-        <span class="kw-2">*</span><span class="self">self </span>- vector_proj
+        <span class="self">self</span>.clone() - vector_proj
     }
 
-    <span class="doccomment">/// Calculates the angle in radians between this vector and the x-axis.
+    <span class="doccomment">/// Calculates the angle in radians between this vector and the n-axis.
     ///
     /// # Returns
     ///
-    /// The angle between the vector and the x-axis in radians.
+    /// The angle between the vector and the n-axis in radians.
     ///
     /// # Example
     ///
     /// ```
-    /// let v = Vector::new(1.0, 1.0, 0.0);
+    /// let v = Vector::new(vec![1.0, 2.0, 3.0]);
     /// let angle = v.angle_with_x_axis();
     /// ```
-    </span><span class="kw">pub fn </span>angle_with_x_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f64 {
-        <span class="kw">let </span>unit_x = Vector::new(<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>);
-        <span class="self">self</span>.angle_between(<span class="kw-2">&amp;</span>unit_x)
-    }
+    </span><span class="kw">pub fn </span>angle_with_axis(<span class="kw-2">&amp;</span><span class="self">self</span>, axis: <span class="kw-2">&amp;</span>Vector) -&gt; f64 {
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != axis.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for angle calculation."</span>);
+        }
+        <span class="self">self</span>.angle_between(axis)
+    }    
 
-    <span class="doccomment">/// Calculates the angle in radians between this vector and the y-axis.
+    <span class="doccomment">/// Calculates the dimensions of this vector.
     ///
     /// # Returns
     ///
-    /// The angle between the vector and the y-axis in radians.
+    /// The number of components in this vector.
     ///
     /// # Example
     ///
     /// ```
-    /// let v = Vector::new(0.0, 1.0, 1.0);
-    /// let angle = v.angle_with_y_axis();
+    /// let v = Vector::new(vec![1.0, 2.0, 3.0]);
+    /// let dimensions = v.dimensions();
     /// ```
-    </span><span class="kw">pub fn </span>angle_with_y_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f64 {
-        <span class="kw">let </span>unit_y = Vector::new(<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>);
-        <span class="self">self</span>.angle_between(<span class="kw-2">&amp;</span>unit_y)
+    </span><span class="kw">pub fn </span>dimensions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.components.len()
     }
+}
 
-    <span class="doccomment">/// Calculates the angle in radians between this vector and the z-axis.
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Vector {
+    <span class="doccomment">/// Displays this vector as a string.
     ///
     /// # Returns
     ///
-    /// The angle between the vector and the z-axis in radians.
+    /// This vector as a string.
     ///
     /// # Example
     ///
     /// ```
-    /// let v = Vector::new(1.0, 0.0, 1.0);
-    /// let angle = v.angle_with_z_axis();
+    /// let v = Vector::new(vec![1.0, 2.0, 3.0]);
+    /// println!("Vector: {}", v);
     /// ```
-    </span><span class="kw">pub fn </span>angle_with_z_axis(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f64 {
-        <span class="kw">let </span>unit_z = Vector::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>);
-        <span class="self">self</span>.angle_between(<span class="kw-2">&amp;</span>unit_z)
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"("</span>)<span class="question-mark">?</span>;
+        <span class="kw">for </span>(index, component) <span class="kw">in </span><span class="self">self</span>.components.iter().enumerate() {
+            <span class="kw">if </span>index &gt; <span class="number">0 </span>{
+                <span class="macro">write!</span>(f, <span class="string">", "</span>)<span class="question-mark">?</span>;
+            }
+            <span class="macro">write!</span>(f, <span class="string">"{}"</span>, component)<span class="question-mark">?</span>;
+        }
+        <span class="macro">write!</span>(f, <span class="string">")"</span>)
     }
 }
 
@@ -792,15 +769,19 @@
 /// # Examples
 ///
 /// ```
-/// let v1 = Vector::new(1.0, 2.0, 3.0);
-/// let v2 = Vector::new(4.0, 5.0, 6.0);
+/// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+/// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
 /// let sum = v1 + v2;
 /// ```
 </span><span class="kw">impl </span>Add <span class="kw">for </span>Vector {
     <span class="kw">type </span>Output = Vector;
 
     <span class="kw">fn </span>add(<span class="self">self</span>, other: Vector) -&gt; Vector {
-        Vector::new(<span class="self">self</span>.x + other.x, <span class="self">self</span>.y + other.y, <span class="self">self</span>.z + other.z)
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != other.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for addition."</span>);
+        }
+        <span class="kw">let </span>components = <span class="self">self</span>.components.iter().zip(other.components.iter()).map(|(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b)| a + b).collect();
+        Vector::new(components)
     }
 }
 
@@ -809,15 +790,19 @@
 /// # Examples
 ///
 /// ```
-/// let v1 = Vector::new(4.0, 5.0, 6.0);
-/// let v2 = Vector::new(1.0, 2.0, 3.0);
-/// let diff = v1 - v2;
+/// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+/// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
+/// let sum = v1 + v2;
 /// ```
 </span><span class="kw">impl </span>Sub <span class="kw">for </span>Vector {
     <span class="kw">type </span>Output = Vector;
 
     <span class="kw">fn </span>sub(<span class="self">self</span>, other: Vector) -&gt; Vector {
-        Vector::new(<span class="self">self</span>.x - other.x, <span class="self">self</span>.y - other.y, <span class="self">self</span>.z - other.z)
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != other.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for subtraction."</span>);
+        }
+        <span class="kw">let </span>components = <span class="self">self</span>.components.iter().zip(other.components.iter()).map(|(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b)| a - b).collect();
+        Vector::new(components)
     }
 }
 
@@ -826,14 +811,15 @@
 /// # Examples
 ///
 /// ```
-/// let v = Vector::new(1.0, 2.0, 3.0);
+/// let v = Vector::new(vec![1.0, 2.0, 3.0]);
 /// let scaled = v * 2.0;
 /// ```
 </span><span class="kw">impl </span>Mul&lt;f64&gt; <span class="kw">for </span>Vector {
     <span class="kw">type </span>Output = Vector;
 
     <span class="kw">fn </span>mul(<span class="self">self</span>, scalar: f64) -&gt; Vector {
-        Vector::new(<span class="self">self</span>.x * scalar, <span class="self">self</span>.y * scalar, <span class="self">self</span>.z * scalar)
+        <span class="kw">let </span>components = <span class="self">self</span>.components.iter().map(|<span class="kw-2">&amp;</span>x| x * scalar).collect();
+        Vector::new(components)
     }
 }
 
@@ -842,31 +828,42 @@
 /// # Examples
 ///
 /// ```
-/// let v = Vector::new(2.0, 4.0, 6.0);
-/// let divided = v / 2.0;
+/// let v = Vector::new(vec![1.0, 2.0, 3.0]);
+/// let scaled = v / 2.0;
 /// ```
 </span><span class="kw">impl </span>Div&lt;f64&gt; <span class="kw">for </span>Vector {
     <span class="kw">type </span>Output = Vector;
 
     <span class="kw">fn </span>div(<span class="self">self</span>, scalar: f64) -&gt; Vector {
-        Vector::new(<span class="self">self</span>.x / scalar, <span class="self">self</span>.y / scalar, <span class="self">self</span>.z / scalar)
+        <span class="kw">if </span>scalar == <span class="number">0.0 </span>{
+            <span class="macro">panic!</span>(<span class="string">"Division by zero is not allowed."</span>);
+        }
+        <span class="kw">let </span>components = <span class="self">self</span>.components.iter().map(|<span class="kw-2">&amp;</span>x| x / scalar).collect();
+        Vector::new(components)
     }
 }
+
 
 <span class="doccomment">/// Implements component-wise multiplication operation for Vector.
 ///
 /// # Examples
 ///
 /// ```
-/// let v1 = Vector::new(1.0, 2.0, 3.0);
-/// let v2 = Vector::new(4.0, 5.0, 6.0);
+/// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+/// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
 /// let product = v1 * v2;
 /// ```
 </span><span class="kw">impl </span>Mul&lt;Vector&gt; <span class="kw">for </span>Vector {
     <span class="kw">type </span>Output = Vector;
 
     <span class="kw">fn </span>mul(<span class="self">self</span>, other: Vector) -&gt; Vector {
-        Vector::new(<span class="self">self</span>.x * other.x, <span class="self">self</span>.y * other.y, <span class="self">self</span>.z * other.z)
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != other.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for component-wise multiplication."</span>);
+        }
+        <span class="kw">let </span>components = <span class="self">self</span>.components.iter().zip(other.components.iter())
+            .map(|(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b)| a * b)
+            .collect();
+        Vector::new(components)
     }
 }
 
@@ -875,15 +872,25 @@
 /// # Examples
 ///
 /// ```
-/// let v1 = Vector::new(2.0, 4.0, 6.0);
-/// let v2 = Vector::new(1.0, 2.0, 3.0);
-/// let quotient = v1 / v2;
+/// let v1 = Vector::new(vec![1.0, 2.0, 3.0]);
+/// let v2 = Vector::new(vec![1.0, 2.0, 4.0]);
+/// let product = v1 * v2;
 /// ```
 </span><span class="kw">impl </span>Div&lt;Vector&gt; <span class="kw">for </span>Vector {
     <span class="kw">type </span>Output = Vector;
 
     <span class="kw">fn </span>div(<span class="self">self</span>, other: Vector) -&gt; Vector {
-        Vector::new(<span class="self">self</span>.x / other.x, <span class="self">self</span>.y / other.y, <span class="self">self</span>.z / other.z)
+        <span class="kw">if </span><span class="self">self</span>.dimensions() != other.dimensions() {
+            <span class="macro">panic!</span>(<span class="string">"Vectors must have the same number of components for component-wise division."</span>);
+        }
+        <span class="kw">let </span>components = <span class="self">self</span>.components.iter().zip(other.components.iter())
+            .map(|(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b)| {
+                <span class="kw">if </span>b == <span class="number">0.0 </span>{
+                    <span class="macro">panic!</span>(<span class="string">"Division by zero is not allowed."</span>);
+                }
+                a / b
+            })
+            .collect();
+        Vector::new(components)
     }
-}
-</code></pre></div></section></main></body></html>
+}</code></pre></div></section></main></body></html>
