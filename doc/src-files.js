@@ -1,4 +1,4 @@
 var srcIndex = new Map(JSON.parse('[\
-["VectorTools",["",[],["vectors.rs"]]]\
+["VectorTools",["",[],["algebra.rs"]]]\
 ]'));
 createSrcSidebar();

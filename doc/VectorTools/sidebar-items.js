@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Vector"]};
+window.SIDEBAR_ITEMS = {"struct":["Matrix","Vector"]};
